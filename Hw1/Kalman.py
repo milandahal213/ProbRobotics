@@ -1,4 +1,10 @@
 
+'''
+Main file for Kalman Filter Assignment
+Code by: Milan Dahal
+Feb 13, 2023
+'''
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm
@@ -38,6 +44,8 @@ class Kalman:
 		print("State",self.S)
 
 
+
+
 	def display(self):
 		print("***********")
 		print("State Matrix = ",self.S)
@@ -45,18 +53,4 @@ class Kalman:
 		print("***********")
 
 
-SV=1
-A=np.array([[1,1],[0,1]])
-G=np.array([[1/2,1]])
-onlyPredict=Kalman(A=A,SV=SV,G=G)
-for i in range(4):
-	SE=onlyPredict.predict()
-	onlyPredict.display()
-
-MV=8
-C=np.array([[1,0]])
-PandM= Kalman(A=A, SV=SV, G=G, MV=8, SE=SE, C=C)
-PandM.predict()
-PandM.update(10)
-PandM.display()
 
