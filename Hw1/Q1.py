@@ -5,5 +5,4 @@ G=np.array([[1/2,1]]) # relation between the acc and position and velocity (nois
 onlyPredict=Kalman(A=A,SV=SV,G=G) #initializing object on Kalman with only A, SV and G, no measurement and control
 for i in range(5): # running the code for 5 time steps
 	onlyPredict.predict()
-	onlyPredict.update(0)
 	onlyPredict.display() #Displays the State and Covariance matrix on each timestep

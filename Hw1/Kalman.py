@@ -35,15 +35,11 @@ class Kalman:
 		self.SE = self.A.dot(self.SE.dot(self.A.transpose())) + self.R
 		return self.SE
  
-
 	def update(self, z):
 		temp=self.C.dot(self.SE.dot(self.C.transpose())) + self.Q
 		Kt = self.SE .dot(self.C.transpose().dot(np.linalg.inv(temp)))
 		self.S = self.S + Kt.dot(z-self.C.dot(self.S))
 		self.SE=(self.I-Kt.dot(self.C)).dot(self.SE)
-		print("State",self.S)
-
-
 
 
 	def display(self):
