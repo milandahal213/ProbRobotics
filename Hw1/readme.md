@@ -13,4 +13,4 @@ To run the question 1, run the python file Q1.py
 To run the question 2, run the python file Q2.py
 
 ## Question 3
-To run the question 2, run the python file Q3.py
+To run the question 3, run the python file Q3.py
