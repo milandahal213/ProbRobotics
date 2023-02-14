@@ -6,12 +6,11 @@ Feb 13, 2023
 '''
 
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.stats import norm
 import math
 
+
 class Kalman:
-	def __init__(self,SV=None ,MV=None, A=None, B=None, C=None, G=None, SE=None):
+	def __init__(self,SV=None, S=None ,MV=None, A=None, B=None, C=None, G=None, SE=None):
 		self.SV=SV
 		self.G=G 
 		self.R= self.SV * self.G * self.G.transpose()
@@ -19,7 +18,7 @@ class Kalman:
 		self.A=A
 		self.B  = 0 if B is None else B #control  to state
 		self.n = self.A.shape[1]
-		self.S = np.zeros((self.n,1)) # initial state is all zero with size n x 1
+		self.S = np.zeros((self.n,1)) if S is None else S# initial state is all zero with size n x 1
 		self.SE = np.zeros((self.n, self.n )) if SE is None else SE  # initial state variance Sigma  n x x 		
 
 		self.C=C
@@ -31,7 +30,7 @@ class Kalman:
 		self.I = np.eye(2)
 
 	def predict(self,u=0):
-		self.S = self.A.dot(self.S) + np.dot(self.B,u)
+		self.S = np.dot(self.A,self.S) + np.dot(self.B,u)
 		self.SE = self.A.dot(self.SE.dot(self.A.transpose())) + self.R
 		return self.SE
  
@@ -47,6 +46,12 @@ class Kalman:
 		print("State Matrix = ",self.S)
 		print("Covariance Matrix = ", self.SE)
 		print("***********")
+
+
+
+
+
+
 
 
 
