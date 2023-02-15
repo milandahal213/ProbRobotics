@@ -1,3 +1,4 @@
+#inspiration from https://irwinsnet.github.io/probrob/nb03.html 
 from Kalman import *
 SE=[]
 SV=1   # variance of wind
