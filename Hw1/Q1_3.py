@@ -11,5 +11,10 @@ for i in range(5): # running the code for 5 time steps
 
 
 for se in SE:
-	print(se)
+	#print(se)
 	e_val, e_vec = np.linalg.eig(se)
+	print(e_vec)
+	print("!!!!!")
+	print(e_vec[0][0])
+	print(e_vec[1][0])
+	print("******")
