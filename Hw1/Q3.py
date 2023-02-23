@@ -18,7 +18,7 @@ C=np.array([[1,0]])
 withControl=Kalman(A=A,B=B,SV=SV,G=G,S=S,MV=8,C=C) #initializing object on Kalman with only A, SV and G, no measurement and control
 
 for i in range(5):
-	s,se=withControl.predict(u=1)
+	s,se = withControl.predict(u=1)
 	withControl.display()
 	pos=s[0]
 	posvar= se[0][0]
