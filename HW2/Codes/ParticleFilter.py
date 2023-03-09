@@ -6,13 +6,16 @@ import cv2
 import time
 
 
-bins=50
-path="/Users/mdahal01/Documents/Probabilistic Robotics/hw2/3Dmap.png"
-MapImage=cv2.imread(path)
-#self.uneditedImage=cv2.imread(self.path)
+bins=50 # how many color categories to check the histogram
+Aperture = 20 #see how wide the camera aperture is for obs image
 
-Aperture = 20
-#worldimage.display("Image")
+
+import os
+imageFolder=os.path.normpath(os.getcwd() + os.sep + os.pardir)
+path=imageFolder+"/MarioMap.png"  #Change the name of the image file here
+print(path)
+MapImage=cv2.imread(path)
+
 
 world=Map(path)
 xminWorld,yminWorld,xmaxWorld,ymaxWorld= world.boundary() #set the boundary of the world
@@ -20,45 +23,17 @@ xminWorld,yminWorld,xmaxWorld,ymaxWorld= world.boundary() #set the boundary of t
 xmaxImage,ymaxImage = world.dimension()
 
 drone=Drone(world) #Create a drone in the world
-#droneImage= overlay(MapImage,drone.pos(),text="Drone") # add  the drone on the image
-#display(droneImage, "Map with Drone")
+
 obsImage=cropImage(MapImage, drone.pos(),  xmaxImage, ymaxImage, m=Aperture) #create an observation image for drone
 obsImage=addGaussianNoise(obsImage,m=Aperture) #add noise to the observation image from drone
-#display(obsImage, "Drone")
-# worldimage.displayCrop(refImage,"Gaussian") #show what drone is seeing
-
-'''
-for i in range(10):
-
-	tx=int(np.random.uniform(100,300))
-	ty=int(np.random.uniform(100,300))
-	print(tx,ty)
-	refImage=worldimage.cropImage((tx,ty))
-	worldimage.displayCrop(refImage,"cropped")
-'''
 
 N=1000
 particles=[None] * N
 refImage=[None] * N
+
 #generating particles
 for i in range(N):
 	particles[i]= Particles(world)
-	#print(particles[i].pos())
-i=0
-# while we find a localization point 
-#ParticleImage=MapImage.copy()
-'''
-for particle in particles:
-	ParticleImage= overlay(ParticleImage, particle.pos(),thickness=1, radius2=0,color=(0,250,100),text=str(i)) #drawing the particles
-	refImage[i]= cropImage(MapImage, particle.pos(),xmaxImage,ymaxImage ,m=Aperture)
-	i+=1
-	#crop image for each particles
-	#compare the cropped image of each particle with the image from drone
-'''
-#Move Drone
-
-#display(ParticleImage,"particle image")
-
 
 def resamplingFuntion( dx, dy): #kind of roulette wheel implementation
 	#generate a random number between 0 and 1
@@ -79,9 +54,6 @@ def resamplingFuntion( dx, dy): #kind of roulette wheel implementation
 
 
 	for i in range(N):
-
-		#oldx,oldy=particles[i].worldPos()
-
 		#generating noise for movement
 		randVal=np.random.uniform(0,2*math.pi)
 		noiseNx=round(math.cos(randVal), 4) * 0.1
@@ -90,11 +62,28 @@ def resamplingFuntion( dx, dy): #kind of roulette wheel implementation
 		nx= max(min(x[i] + dx +  noiseNx,xmaxWorld),xminWorld)
 		ny= max(min(y[i] + dy +  noiseNy,ymaxWorld),yminWorld)
 
-
 		particles[i].moveParticle(nx,ny)
 
-for i in range(100):
+
+#Particle filter loop 
+# Run till the condition is satisfied
+# Calculate mean and variance of the particles
+#if the variance of the particles get below 0.1 (for example ) stop the filter and print the position
+
+
+IterationCounter=0
+CentroidDistanceVar = 10000
+CentroidDroneVar=0
+meanPosition=[]
+varCentroid=[]
+varDrone=[]
+while not (CentroidDistanceVar < 0.4):
+	IterationCounter+=1
 	metric_val=[0]*N
+	
+	particleX=[]
+	particleY=[]
+
 	dx, dy= drone.moveStep()
 	obsImage=cropImage(MapImage, drone.pos(),xmaxImage,ymaxImage,m=Aperture) #create an observation image for drone
 	obsImage=addGaussianNoise(obsImage) #add noise to the observation image from drone
@@ -103,23 +92,43 @@ for i in range(100):
 	#display(obsImage, "Observation from Drone")
 
 	ParticleImage=MapImage.copy()
+	particleCoor=[]
 	for i in range (N):
-		try:
-			ParticleImage = overlay(ParticleImage, particles[i].pos(),thickness=1 , radius2=7,color=(0,0,255)) #drawing the particles	
-			refImage[i]=cropImage(MapImage, particles[i].pos(), xmaxImage,ymaxImage,m=Aperture )
-			tempImage=refImage[i].copy()
-			refHist = cv2.calcHist([refImage[i]], [0, 1, 2], None, [bins, bins, bins], [0, 256, 0, 256, 0, 256])
-			cv2.normalize(refHist, refHist, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
-			tempMetric=cv2.compareHist(obsHist, refHist, cv2.HISTCMP_CORREL) ** 2
-			if (tempMetric < 0.05):	
-				metric_val[i]=0.001
-			else:
-				metric_val[i]= cv2.compareHist(obsHist, refHist, cv2.HISTCMP_CORREL) ** 2
-		except:
-			print("err",i)
-		#display(refImage[i],"ref Image")
+		#	try:
+
+		particle_x, particle_y = particles[i].worldPos()
+		ParticleImage = overlay(ParticleImage, particles[i].pos(),thickness=1 , radius2=7,color=(0,0,255)) #drawing the particles	
+		particleCoor.append((particle_x,particle_y))
+
+		refImage[i]=cropImage(MapImage, particles[i].pos(), xmaxImage,ymaxImage,m=Aperture )
+		tempImage=refImage[i].copy()
+		refHist = cv2.calcHist([refImage[i]], [0, 1, 2], None, [bins, bins, bins], [0, 256, 0, 256, 0, 256])
+		cv2.normalize(refHist, refHist, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+		tempMetric=cv2.compareHist(obsHist, refHist, cv2.HISTCMP_CORREL) ** 2
+		metric_val[i]= cv2.compareHist(obsHist, refHist, cv2.HISTCMP_CORREL) ** 2
+		#	except:
+		#		print("err",i)
 
 	sumofweights=sum(metric_val)
+
+	mean_particle = np.mean(particleCoor, axis=0)
+	#find distance from each particle to the mean of the particles
+	CentroidDistance=[]
+	for i in range(N):
+		CentroidDistance.append(math.sqrt((mean_particle[0] - particleCoor[i][0])**2 + (mean_particle[1] - particleCoor[i][1])**2))
+
+	CentroidDistanceVar =np.var(CentroidDistance)
+	varCentroid.append(CentroidDistanceVar)
+
+
+
+	DroneDistance=[]
+
+	for i in range(N):
+		DroneDistance.append(math.sqrt((drone.worldPos()[0] - particleCoor[i][0])**2 + (drone.worldPos()[1] - particleCoor[i][1])**2))
+
+	DroneDistanceVar =	np.var(DroneDistance)
+	varDrone.append(DroneDistanceVar)
 	#normalize the metric_val to 1 and set that as weight
 	for i in range (N):
 		particles[i].reweigh(metric_val[i]/sumofweights)
@@ -129,4 +138,14 @@ for i in range(100):
 	droneImage= overlay(ParticleImage,drone.pos(),text="Drone") # add  the drone on the image
 	display(droneImage, "Drone")
 
+print(IterationCounter)
+#print("variances", varianceX, varianceY)
+print("drone position", drone.worldPos())
+print("mean of particles,", mean_particle)
+display(droneImage, "Drone")
 
+plt.plot(varCentroid, color='r', label='Variance of distance between particles and the centroid of particle cluster')
+plt.plot(varDrone, color='b', label='Variance of distance between particles and the actual drone position')
+plt.legend()
+plt.ylabel('Error')
+plt.show()
