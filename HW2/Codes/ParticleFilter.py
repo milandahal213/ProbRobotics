@@ -143,7 +143,6 @@ print(IterationCounter)
 print("drone position", drone.worldPos())
 print("mean of particles,", mean_particle)
 display(droneImage, "Drone")
-
 plt.plot(varCentroid, color='r', label='Variance of distance between particles and the centroid of particle cluster')
 plt.plot(varDrone, color='b', label='Variance of distance between particles and the actual drone position')
 plt.legend()
