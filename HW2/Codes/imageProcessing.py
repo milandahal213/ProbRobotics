@@ -4,11 +4,20 @@ import numpy as np
 
 
 
-def overlay(image, data, radius2= 8, color=(0,0,255), thickness=2,text=" "):
+def overlay(image, data, color=(0,0,255), thickness=5,text=" "):
 	x,y,radius=data
+	#print("radius", radius)
+	radius = int(radius*1000)
+	#print("radius", radius)
+	if radius<1:
+		radius=1
+	else:
+		radius = int(radius)
+	if(not text==" "):
+		radius=15
 	img=image.copy()
-	img=cv2.circle(img, (x,y) , radius, (255,255,0),thickness)
-	img=cv2.circle(img, (x,y) , radius2, color,thickness)
+	img=cv2.circle(img, (x,y) , (radius), (255,0,0),thickness)
+	img=cv2.circle(img, (x,y) , (radius+2), color,thickness)
 	img=overlayText(img, x,y,text, radius)
 	return img
 
@@ -27,6 +36,7 @@ def overlayText(img, x,y, text,radius=8):
 def display(image,title="Image"):
 	cv2.imshow(title,image)
 	cv2.waitKey(0)
+
 
 def cropImage(image,center, xmax,ymax , m=100):
 	x,y,rad=center
