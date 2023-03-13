@@ -14,7 +14,7 @@
 First thing the code does is opens the image file. You can choose the file you want to open and run. 
 Then it creates an object with class Map. The class Map has functions that can find the boundaries, convert world coordinates to image coordinates, etc. 
 
-### Cretes a drone
+### Creates a drone
 After getting the world boundaries, a drone is created using Drone class within the World class. The Drone class has functions that can find the position of the drone, move the drone as well as convert the position of drone from and to world and image coordinates. 
 
 ### Create N particles
