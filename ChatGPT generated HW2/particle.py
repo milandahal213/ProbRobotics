@@ -193,7 +193,7 @@ def average_point(points):
     # Return the average point as a tuple
     return (avg_x, avg_y)
 
-image_path = "/Users/mdahal01/Documents/GitHub/ProbRobotics/ChatGPT generated HW2/CityMap.png"
+image_path = "CityMap.png"
 N = 1000
 image = cv2.imread(image_path)
 h, w, _ = image.shape
