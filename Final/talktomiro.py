@@ -23,29 +23,26 @@ def get_all_widgets(api_key, board_id):
     
     if response.status_code == 200:
         return response.json()["data"]
-        print('1')
+
     else:
         print(f"Error: Unable to retrieve widgets. Status code {response.status_code}")
         return []
 
-api_key = "eyJtaXJvLm9yaWdpbiI6ImV1MDEifQ_OTJW-3yJ4-iZroCFRBZrTttZzb0"
-board_id = "uXjVMTM_70Y%3D"
+
+def giveframeid(api_key,board_id,frame_title):
+	frames = [
+        w
+        for w in get_all_widgets(api_key, board_id)
+        if w["type"] == "frame" and w["data"]["title"] == frame_title
+    ]
+	if not frames:
+		print(f"No frames with the title '{frame_title}' were found.")
+		sys.exit()
+	frame = frames[0]
+	frame_id=frame['id']
+	return frame_id , frame
 
 
-frame_title = "milan"
-frames = [
-    w
-    for w in get_all_widgets(api_key, board_id)
-    if w["type"] == "frame" and w["data"]["title"] == frame_title
-]
-if not frames:
-    print(f"No frames with the title '{frame_title}' were found.")
-    sys.exit()
-
-frame = frames[0]
-
-frame_id=frame['id']
-#'3458764553717314817'
 
 
 def get_all_items_within_frame(api_key, board_id, frame_id):
@@ -58,7 +55,6 @@ def get_all_items_within_frame(api_key, board_id, frame_id):
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         return response.json()["data"]
-        print('1')
     else:
         print(f"Error: Unable to retrieve widgets. Status code {response.status_code}")
         return []    
@@ -87,8 +83,11 @@ def find_rectangles_with_text_in_titled_frame(api_key, board_id, text, frame_tit
     target_frame = frames
     print(f"Targeted Frame : {target_frame[0]}")
     frame_id = target_frame[0]['id']
+
     frame_items = get_all_items_within_frame(api_key, board_id, frame_id)
-    rectangles = [f for f in frame_items if text in f["data"]["content"]]
+
+    rectangles = [f for f in frame_items if 'shape' in f["type"] and text in f["data"]["content"]]
+   
     return rectangles
 
 
@@ -442,7 +441,7 @@ def get_robot_distances(position, frame, robot_rectangle, wall_rectangles):
 
     return distances
 
-def get_robot_distances_mt(position, frame, robot_rectangle, wall_rectangles):
+def get_robot_distances_mt(board_id, frame_id,api_key,position, frame, robot_rectangle, wall_rectangles, create):
     #distances = {"north": float("inf"),"south": float("inf"), "left": float("inf"), "right": float("inf")}
     distances = [0,0,0,0]
     directions = {"front": (0, -1),"back": (0, 1), "left": (-1, 0), "right": (1, 0)}
@@ -490,7 +489,6 @@ def get_robot_distances_mt(position, frame, robot_rectangle, wall_rectangles):
                     #print(y_r,y_bl)
                     d_n.append(abs(y_r-y_tl))
                     intersect = True
-                    print('im here')
             
             elif orientation == 90: #east
                 #print(x_r,x_tl, y_r,y_tl, y_r ,y_bl)
@@ -499,12 +497,8 @@ def get_robot_distances_mt(position, frame, robot_rectangle, wall_rectangles):
                     intersect = True
             
             elif orientation == 180: #south
-            	print("inelif")
-            	print("y_r",y_r ,"y_bl" ,y_bl,"x_r" ,x_r , "x_bl ",x_bl ,"x_r",x_r ,"y_br",y_br)
-
-
             	if (y_r < y_bl) and (x_r > x_bl and x_r < x_br):
-            		print("INSIDE")
+ 
             		d_s.append(abs(y_bl-y_r))
             		intersect = True
 
@@ -523,13 +517,13 @@ def get_robot_distances_mt(position, frame, robot_rectangle, wall_rectangles):
     distances[2]= min(d_s)
     #west:
     distances[3]= min(d_w)
-    print(distances, position, len(d_s))
+    #print(distances, position, len(d_s))
 
-
-    create_thin_rectangle(board_id, frame_id, position, (position[0], position[1]-distances[0]), api_key)
-    create_thin_rectangle(board_id, frame_id, position, (position[0]+distances[1],position[1]), api_key)
-    create_thin_rectangle(board_id, frame_id, position, (position[0],position[1]+distances[2]), api_key)
-    create_thin_rectangle(board_id, frame_id, position, (position[0]-distances[3],position[1]), api_key)
+    if(create):
+	    create_thin_rectangle(board_id, frame_id, position, (position[0], position[1]-distances[0]), api_key)
+	    create_thin_rectangle(board_id, frame_id, position, (position[0]+distances[1],position[1]), api_key)
+	    create_thin_rectangle(board_id, frame_id, position, (position[0],position[1]+distances[2]), api_key)
+	    create_thin_rectangle(board_id, frame_id, position, (position[0]-distances[3],position[1]), api_key)
 
     return distances
 
@@ -641,10 +635,9 @@ def create_thin_rectangle(board_id, frame_id, start_point, end_point, api_key):
 
 
 
-def create_robot_position(board_id, frame_id, position, width, height, rotation, api_key):
+def create_robot_position(board_id, frame_id, position, width, height, api_key):
     url = f"https://api.miro.com/v2/boards/{board_id}/shapes"
     #print(position[0],position[1])
-    print(frame_id)
     payload = {
         "data": {
             "shape": "rectangle",
@@ -652,7 +645,7 @@ def create_robot_position(board_id, frame_id, position, width, height, rotation,
         "geometry": {
             "width": width,
             "height": height,
-            "rotation": rotation
+            "rotation": 0
         },
         "position": {
             "origin": "center",
@@ -672,3 +665,73 @@ def create_robot_position(board_id, frame_id, position, width, height, rotation,
     return response.text
 
 
+
+def update_circle_position_and_size(board_id, circle_widget_id, new_position, new_diameter, api_key):
+    url = f"https://api.miro.com/v1/boards/{board_id}/widgets/{circle_widget_id}"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "position": {"x": new_position[0], "y": new_position[1]},
+        "geometry": {"radius": new_diameter / 2}
+    }
+
+    response = requests.patch(url, headers=headers, json=data)
+
+    if response.status_code == 200:
+        return True
+    else:
+        return False
+
+
+def update_text_widget(board_id: str, widget_id: str, api_key: str, new_text: str,) -> bool:
+    update_data = {
+        "text": new_text
+    }
+    response = requests.patch(
+        f"https://api.miro.com/v1/boards/{board_id}/widgets/{widget_id}",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        json=update_data
+    )
+
+    if response.status_code == 200:
+        return True
+    else:
+        print(f"Error updating text widget: {response.status_code} - {response.text}")
+        return False
+
+
+def create_robot_position_circle(board_id, frame_id, position,radius, api_key):
+    url = f"https://api.miro.com/v2/boards/{board_id}/shapes"
+    #print(position[0],position[1])
+    payload = {
+        "data": {
+            "shape": "circle",
+        },
+        "style":{"fillColor":"#0000FF"},
+        "geometry": {
+            "height": radius,
+            "width": radius,
+        },
+        "position": {
+            "origin": "center",
+            "x": position[0],
+            "y": position[1]
+        },
+        "parent": {"id": frame_id}
+        
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "authorization": f"Bearer {api_key}"
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+
+    return response.json()["id"],response.json()["position"]["x"],response.json()["position"]["y"]
