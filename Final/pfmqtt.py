@@ -31,7 +31,9 @@ class MQ:
         self.val+=str(message.payload.decode("utf-8"))
 
 
-    def completeval(self):
+    def robot_distances(self):
+        while(self.interimval().find('end')<0): #keep waiting for complete set of messages (with end)
+            time.sleep(0.1)
         value=json.loads(self.val)
         self.val=''
         return value

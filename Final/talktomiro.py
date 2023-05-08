@@ -713,7 +713,7 @@ def create_robot_position_circle(board_id, frame_id, position,radius, api_key):
         "data": {
             "shape": "circle",
         },
-        "style":{"fillColor":"#0000FF"},
+        "style":{"fillColor":"#FFFF00"},
         "geometry": {
             "height": radius,
             "width": radius,
