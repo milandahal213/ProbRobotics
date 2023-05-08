@@ -2,7 +2,7 @@
 from talktomiro import *
 
 #Define all the constants
-n_points=1
+n_points=5
 widget_id = "3458764553802833089"
 walltext = "<p>wall</p>"
 robottext = "<p>robot</p>"
@@ -41,7 +41,7 @@ all_distances =[]  #all_distances format = [[id, x, y,[N,E,S,W],...]]
 
 for position in positions:
 
-    temp=create_robot_position_circle(board_id, frame["id"], position, 20, api_key)
+    temp=create_robot_position_circle(board_id, frame["id"], position, 20,'#FFFF00' , api_key)
     distances = get_robot_distances_mt(board_id, frame_id,api_key,position, frame, robot_rectangle, wall_rectangles,False)
     all_distances.append([temp,distances])
 
@@ -73,8 +73,8 @@ def calculate_probability(datafromrobot,dist):
     particle_east=dist[1][1]
     particle_south=dist[1][2]
     particle_west=dist[1][3]
-    prob= (robot_north-particle_north)+(robot_east-particle_east)+(robot_south-particle_south)+(robot_west-particle_west)
-    return(particle_id,particle_x,particle_y,prob)
+    comp= (robot_north-particle_north)+(robot_east-particle_east)+(robot_south-particle_south)+(robot_west-particle_west)
+    return(comp,particle_id,particle_x,particle_y)
 
 
 
@@ -82,7 +82,14 @@ particle_prob=[]
 for dist in all_distances:
     particle_prob.append(calculate_probability(datafromrobot,dist))
 
-print(particle_prob)
+
+
+particle_prob.sort()
+print(board_id, particle_prob[0][1], (particle_prob[0][2],particle_prob[0][3]), 100 , api_key)
+update_circle_position_and_size(board_id, particle_prob[0][1], (particle_prob[0][2],particle_prob[0][3]), 100 , api_key)
+update_circle_position_and_size(board_id, '3458764553826583474', (430.0, 604.0), 400 , api_key)
+
+#create_robot_position_circle(board_id, frame["id"], (particle_prob[0][1],particle_prob[0][2]), 40,, api_key)
 
 
 #******************************************************************************************#

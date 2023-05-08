@@ -19,7 +19,7 @@ class MQ:
     def __init__(self,broker,name):
         self.broker=broker
         self.topic_sub=name+'/tell'
-        self.topic_pub=name+'listen'
+        self.topic_pub=name+'/listen'
         self.val=''
         self.client=mqtt.Client("uniquename") # use a unique name
         self.client.on_message = self.whenCalled # callback
@@ -28,19 +28,17 @@ class MQ:
         self.start()
 
     def whenCalled(self, client, userdata, message):
+        print("whencalled called")
         self.val+=str(message.payload.decode("utf-8"))
 
 
     def robot_distances(self):
-        while(self.interimval().find('end')<0): #keep waiting for complete set of messages (with end)
+        while(self.val.find('end')<0): #keep waiting for complete set of messages (with end)
             time.sleep(0.1)
         value=json.loads(self.val)
         self.val=''
         return value
 
-    def interimval(self):
-        print(self.val)
-        return(self.val)
 
     def start(self):        
         self.client.loop_start() #start the loop
@@ -52,4 +50,7 @@ class MQ:
 
 
     def send(self, msg):
+        print("called")
+        print(self.topic_pub)
+        print(msg)
         self.client.publish(self.topic_pub,msg)
