@@ -11,8 +11,10 @@ import sys
 import numpy as np
 from scipy.stats import norm
 
+
+
 def get_all_widgets(api_key, board_id):
-    url = f"https://api.miro.com/v2/boards/{board_id}/widgets"
+    url = f"https://api.miro.com/v2/boards/{board_id}/items?limit=50"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Accept": "application/json"
@@ -25,6 +27,26 @@ def get_all_widgets(api_key, board_id):
     else:
         print(f"Error: Unable to retrieve widgets. Status code {response.status_code}")
         return []
+
+api_key = "eyJtaXJvLm9yaWdpbiI6ImV1MDEifQ_OTJW-3yJ4-iZroCFRBZrTttZzb0"
+board_id = "uXjVMTM_70Y%3D"
+
+
+frame_title = "milan"
+frames = [
+    w
+    for w in get_all_widgets(api_key, board_id)
+    if w["type"] == "frame" and w["data"]["title"] == frame_title
+]
+if not frames:
+    print(f"No frames with the title '{frame_title}' were found.")
+    sys.exit()
+
+frame = frames[0]
+
+frame_id=frame['id']
+#'3458764553717314817'
+
 
 def get_all_items_within_frame(api_key, board_id, frame_id):
     url = "https://api.miro.com/v2/boards/"+board_id+"/items?parent_item_id="+frame_id+"&limit=50"
@@ -263,22 +285,23 @@ def measure_distance(position, direction, walls):
     return min_distance
 
 def get_random_positions(wall_rectangles, frame, robot_width, robot_height, n_points):
-    positions = []
-    
-    frame_x_min, frame_y_min = 0, 0
-    frame_x_max, frame_y_max = frame['geometry']['width'], frame['geometry']['height']
-    
-    #num_x_steps = int((frame_x_max - frame_x_min - robot_width) / step) + 1
-    #num_y_steps = int((frame_y_max - frame_y_min - robot_height) / step) + 1
-    for n in range(n_points):
-        x=random.randrange(int(frame_x_min + robot_width / 2), int(frame_x_max - robot_width / 2))
-        y=random.randrange(int(frame_y_min + robot_height / 2), int(frame_y_max - robot_height / 2))
-        position = (x, y)
-        if not any(rectangle_collision(position, robot_width, robot_height, wall_rect) for wall_rect in wall_rectangles):
-            positions.append(position)
+	positions = []
+	
+	frame_x_min, frame_y_min = 0, 0
+	frame_x_max, frame_y_max = frame['geometry']['width'], frame['geometry']['height']
+	for n in range(n_points):
+		temp=True
+		while temp:
+			x=random.randrange(int(frame_x_min + robot_width / 2), int(frame_x_max - robot_width / 2))
+			y=random.randrange(int(frame_y_min + robot_height / 2), int(frame_y_max - robot_height / 2))
+			position = (x, y)
+			temp=any(rectangle_collision(position, robot_width, robot_height, wall_rect) for wall_rect in wall_rectangles)
+	
+		positions.append(position)
 
-    return positions
-    
+	return positions
+
+
 def get_possible_positions(robot_position, wall_rectangles, frame, robot_width, robot_height, step):
     positions = []
 
@@ -441,6 +464,7 @@ def get_robot_distances_mt(position, frame, robot_rectangle, wall_rectangles):
             x_max = wall_center[0] + wall_width / 2
             y_min = wall_center[1] - wall_height / 2
             y_max = wall_center[1] + wall_height / 2
+
             x_tl=x_min
             x_tr=x_max
             x_bl=x_min
@@ -475,10 +499,14 @@ def get_robot_distances_mt(position, frame, robot_rectangle, wall_rectangles):
                     intersect = True
             
             elif orientation == 180: #south
-                if (y_r < y_br) and (x_r > x_tl and x_r < y_tr):
-                    d_s.append(abs(y_bl-y_r))
-                    #print(y_r-y_tl)
-                    intersect = True
+            	print("inelif")
+            	print("y_r",y_r ,"y_bl" ,y_bl,"x_r" ,x_r , "x_bl ",x_bl ,"x_r",x_r ,"y_br",y_br)
+
+
+            	if (y_r < y_bl) and (x_r > x_bl and x_r < x_br):
+            		print("INSIDE")
+            		d_s.append(abs(y_bl-y_r))
+            		intersect = True
 
             elif orientation == 270: #west
                 #print(x_r , x_tr , y_r , y_tl , y_r , y_bl)
@@ -495,11 +523,14 @@ def get_robot_distances_mt(position, frame, robot_rectangle, wall_rectangles):
     distances[2]= min(d_s)
     #west:
     distances[3]= min(d_w)
-    #create_thin_rectangle(board_id, frame_id, position, (position[0], position[1]-distances[0]), api_key)
-    #create_thin_rectangle(board_id, frame_id, position, (position[0]+distances[1],position[1]), api_key)
-    #create_thin_rectangle(board_id, frame_id, position, (position[0],position[1]+distances[2]), api_key)
-    #create_thin_rectangle(board_id, frame_id, position, (position[0]-distances[3],position[1]), api_key)
-    print(distances)
+    print(distances, position, len(d_s))
+
+
+    create_thin_rectangle(board_id, frame_id, position, (position[0], position[1]-distances[0]), api_key)
+    create_thin_rectangle(board_id, frame_id, position, (position[0]+distances[1],position[1]), api_key)
+    create_thin_rectangle(board_id, frame_id, position, (position[0],position[1]+distances[2]), api_key)
+    create_thin_rectangle(board_id, frame_id, position, (position[0]-distances[3],position[1]), api_key)
+
     return distances
 
 
@@ -639,160 +670,5 @@ def create_robot_position(board_id, frame_id, position, width, height, rotation,
 
     response = requests.post(url, json=payload, headers=headers)
     return response.text
-
-
-api_key = "eyJtaXJvLm9yaWdpbiI6ImV1MDEifQ_OTJW-3yJ4-iZroCFRBZrTttZzb0"
-board_id = "uXjVMTM_70Y%3D"
-
-
-# Find the "world" frame
-frame_title = "world"
-frames = [
-    w
-    for w in get_all_widgets(api_key, board_id)
-    if w["type"] == "frame" and w["data"]["title"] == frame_title
-]
-if not frames:
-    print(f"No frames with the title '{frame_title}' were found.")
-    sys.exit()
-
-frame = frames[0]
-frame_id=frame['id']
-# Add the following code snippet
-# Constants
-pixels_per_meter = 2000
-# Constants
-target_height_meters = 1.5
-
-url = f"https://api.miro.com/v2/boards/{board_id}/frames/{frame_id}"
-
-# Prepare the payload
-# payload = {
-#     "data": {
-#         "format": "custom",
-#         "title": "world",
-#         "type": "freeform"
-#     },
-#     "position": {
-#         "origin": "center",
-#         "x": 0,
-#         "y": 0
-#     },
-#     "geometry": {
-#         "height": target_height_meters * pixels_per_meter,
-#         "width": None  # This will be updated after fetching the current frame dimensions
-#     }
-# }
-
-# Set up headers
-headers = {
-    "accept": "application/json",
-    "content-type": "application/json",
-    "authorization": f"Bearer {api_key}"
-}
-
-# Fetch the current frame dimensions
-current_frame_response = requests.get(url, headers=headers)
-current_frame = current_frame_response.json()
-current_width = current_frame["geometry"]["width"]
-current_height = current_frame["geometry"]["height"]
-
-# Calculate the new width based on the new height
-new_height_pixels = target_height_meters * pixels_per_meter
-new_width_pixels = current_width * (new_height_pixels / current_height)
-
-# Update the payload with the new width
-#payload["geometry"]["width"] = new_width_pixels
-
-# Send the PATCH request to update the frame's position, width, and height
-#response = requests.patch(url, json=payload, headers=headers)
-
-#print(response.text)
-
-#print(frame['geometry'])
-# Find all "wall" rectangles
-text_to_find = "<p>wall</p>"
-wall_rectangles=find_rectangles_with_text_in_titled_frame(api_key, board_id, text_to_find, frame_title)
-print(len(wall_rectangles))
-# Find the "robot" rectangle
-text_to_find = "<p>robot</p>"
-robot_rectangle = find_rectangle_with_text(api_key, board_id, text_to_find)
-if not robot_rectangle:
-    print(f"No rectangle with the specified text was found.")
-    sys.exit()
-
-robot_width = robot_rectangle["geometry"]["width"]
-robot_height = robot_rectangle["geometry"]["height"]
-step = 100  # You can adjust the step size to your preference
-robot_position = (robot_rectangle["position"]["x"], robot_rectangle["position"]["y"])
-positions = get_possible_positions(robot_position, wall_rectangles, frame, robot_width, robot_height, step)
-
-# Store the reference distances for each position
-reference_distances = {}
-len(positions)
-for position in positions:
-    #print(position)
-    distances = get_robot_distances(position, frame, robot_rectangle, wall_rectangles)
-    #distances = line_rectangle_intersection(position, position, wall_rectangles)
-    reference_distances[position] = distances
-    robot_rotation = robot_rectangle["geometry"].get("rotation", 0)  # Default to 0 if rotation is not set
-    #create_robot_position(board_id, frame_id, position, robot_width, robot_height, robot_rotation, api_key)
-
-# Example: print the reference distances for each position
-
-robot_position = robot_rectangle["position"]["x"], robot_rectangle["position"]["y"]
-robot_width = robot_rectangle["geometry"]["width"]
-robot_height = robot_rectangle["geometry"]["height"]
-robot_rotation = robot_rectangle["geometry"].get("rotation", 0)
-
-#step = 50
-n_points=100
-#positions = get_possible_positions(robot_position, wall_rectangles, frame, robot_width, robot_height, step)
-positions = get_random_positions(wall_rectangles, frame, robot_width, robot_height, n_points)
-
-all_distances =[]
-
-for position in positions:
-    #create_robot_position(board_id, frame["id"], position, robot_width, robot_height, robot_rotation, api_key)
-
-    distances = get_robot_distances_mt(position, frame, robot_rectangle, wall_rectangles)
-    #directions = {"front": (0, -1), "left": (-1, 0), "right": (1, 0)}
-    all_distances.append(distances)
-    #for direction, vector in directions.items():
-        #dist = distances[direction]
-        #print(f"{direction.capitalize()} distance: {dist}")  # Print the calculated distance for debugging
-        #start_point = position
-        #end_point = (position[0] + vector[0] * dist, position[1] + vector[1] * dist)
-        #print(f"{direction.capitalize()} endpoint: {end_point}")  # Print the endpoint for debugging
-        #create_thin_rectangle(board_id, frame_id, start_point, end_point, api_key)
-#print(positions)
-#print(all_distances)
-#print(len(positions))
-#print(len(all_distances))
-#print(reference_distances)
-#for pos, dist in reference_distances.items():
-#    print(f"Position: {pos}, Distances: {dist}")
-
-#loop untill you have most of the points together
-# particledis =[[E1,W1,N1,S1],[20,30,20],[11,20,30,20],.....[En,Wn,Nn,Sn]]
-# particleposes=[[x1,y1],[x2,y2]....[xn,yn]]
-# 
-# for particlepos in particleposes:
-#     print(particlepos)
-#     E,W,N,S=callmirofordistance(particlepos)
-#     particledis.append([E,W,N,S])
-#     
-# 
-# #robot's position
-# Er,Wr,Nr,Sr= callrobot()    
-# 
-# #compare robots position with the particles position (distance) - sum of differneces in EWNS
-# 
-# #sort the distances - which is the probability of the point being the robot's position
-# #resample the particles based on the sorted distances
-# #we will have a new particleposes=[[x1,y1],[x2,y2]....[xn,yn]]   
-#     
-# x1,y1
-# x2,y2
 
 
