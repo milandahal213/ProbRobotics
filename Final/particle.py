@@ -18,10 +18,17 @@ def resamplingFunction(N, particles): #kind of roulette wheel implementation
 	return x,y # positions of newly sampled particles
 
 
-while not (CentroidDistanceVar < 0.1):
+iteration=0
+#wait till status
+#if continue 
+	#run the loop
+# if Done 
+	#stop the loop and 
+#loop
 	iteration+=1
 	metric_val=[0]*N		
-	dx, dy= drone.moveStep()
+	
+	dx, dy= #new x and y from the robot
 
 	obsImage=cropImage(MapImage, drone.pos(),xmaxImage, ymaxImage, m=Aperture) #create an observation image for drone
 	obsImage=addGaussianNoise(obsImage,m=Aperture) #add noise to the observation image from drone
