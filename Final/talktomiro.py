@@ -667,22 +667,31 @@ def create_robot_position(board_id, frame_id, position, width, height, api_key):
 
 
 def update_circle_position_and_size(board_id, circle_widget_id, new_position, new_diameter,  api_key):
-    url = f"https://api.miro.com/v2/boards/{board_id}/widgets/{circle_widget_id}"
+    url = f"https://api.miro.com/v2/boards/{board_id}/shapes/{circle_widget_id}"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
-    data = {
-        "position": {"x": new_position[0], "y": new_position[1]},
-        "geometry": {"radius": new_diameter}
-    }
 
-    response = requests.patch(url, headers=headers, json=data)
+
+    payload = {
+    "data": {"shape": "circle"},
+    "position": {"x": new_position[0], "y": new_position[1]},
+    "geometry": {
+        "height": new_diameter,
+        "width": new_diameter
+    	}
+	}
+
+    
+
+    response = requests.patch(url, headers=headers, json=payload)
 
     if response.status_code == 200:
         return True
     else:
         return False
+
 
 
 def update_text_widget(board_id: str, widget_id: str, api_key: str, new_text: str,) -> bool:
@@ -704,6 +713,9 @@ def update_text_widget(board_id: str, widget_id: str, api_key: str, new_text: st
     else:
         print(f"Error updating text widget: {response.status_code} - {response.text}")
         return False
+
+
+
 
 
 def create_robot_position_circle(board_id, frame_id, position,radius,color, api_key):

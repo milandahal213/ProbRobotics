@@ -46,6 +46,7 @@ for position in positions:
     all_distances.append([temp,distances])
 
 
+print(all_distances)
 #******************************************************************************************#
 update_text_widget(board_id, widget_id, api_key, "Setting up MQTT on ROBOT ... ")
    
@@ -64,10 +65,10 @@ def calculate_probability(datafromrobot,dist):
     particle_x=dist[0][1]
     particle_y=dist[0][2]
 
-    robot_north=datafromrobot["N"]
-    robot_east=datafromrobot["E"]
-    robot_south=datafromrobot["S"]
-    robot_west=datafromrobot["W"]
+    robot_north=datafromrobot["N"]*10
+    robot_east=datafromrobot["E"]*10
+    robot_south=datafromrobot["S"]*10
+    robot_west=datafromrobot["W"]*10
 
     particle_north=dist[1][0]
     particle_east=dist[1][1]
@@ -85,9 +86,8 @@ for dist in all_distances:
 
 
 particle_prob.sort()
-print(board_id, particle_prob[0][1], (particle_prob[0][2],particle_prob[0][3]), 100 , api_key)
+print(particle_prob)
 update_circle_position_and_size(board_id, particle_prob[0][1], (particle_prob[0][2],particle_prob[0][3]), 100 , api_key)
-update_circle_position_and_size(board_id, '3458764553826583474', (430.0, 604.0), 400 , api_key)
 
 #create_robot_position_circle(board_id, frame["id"], (particle_prob[0][1],particle_prob[0][2]), 40,, api_key)
 
