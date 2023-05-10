@@ -10,11 +10,16 @@ from typing import List, Tuple, Dict, Any
 import sys
 import numpy as np
 from scipy.stats import norm
+import pyttsx3
 
+def text_to_speech(text):
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.runAndWait()
 
 
 def get_all_widgets(api_key, board_id):
-    url = f"https://api.miro.com/v2/boards/{board_id}/items?limit=50"
+    url = f"https://api.miro.com/v2/boards/{board_id}/items?limit=20"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Accept": "application/json"
@@ -666,31 +671,31 @@ def create_robot_position(board_id, frame_id, position, width, height, api_key):
 
 
 
-def update_circle_position_and_size(board_id, circle_widget_id, new_position, new_diameter,  api_key):
-    url = f"https://api.miro.com/v2/boards/{board_id}/shapes/{circle_widget_id}"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-
-
-    payload = {
-    "data": {"shape": "circle"},
-    "position": {"x": new_position[0], "y": new_position[1]},
-    "geometry": {
-        "height": new_diameter,
-        "width": new_diameter
-    	}
+def update_circle_position_and_size(board_id, circle_widget_id, new_position, new_diameter, color, api_key):
+	url = f"https://api.miro.com/v2/boards/{board_id}/shapes/{circle_widget_id}"
+	headers = {
+		"Authorization": f"Bearer {api_key}",
+		"Content-Type": "application/json"
 	}
 
-    
 
-    response = requests.patch(url, headers=headers, json=payload)
+	payload = {
+	"data": {"shape": "circle"},
 
-    if response.status_code == 200:
-        return True
-    else:
-        return False
+	"position": {"x": new_position[0], "y": new_position[1]},
+	"geometry": {
+		"height": new_diameter,
+		"width": new_diameter
+		}
+	}
+
+	print("mvoing")
+	response = requests.patch(url, headers=headers, json=payload)
+
+	if response.status_code == 200:
+		return True
+	else:
+		return False
 
 
 
@@ -745,5 +750,59 @@ def create_robot_position_circle(board_id, frame_id, position,radius,color, api_
     }
 
     response = requests.post(url, json=payload, headers=headers)
-
     return response.json()["id"],response.json()["position"]["x"],response.json()["position"]["y"]
+
+
+
+def update_widget_text_multiline(board_id, widget_id, text_lines, interval, api_key):
+    lines = text_lines.split("\n")
+    for line in lines:
+        success = update_text_widget(board_id, widget_id, api_key,line)
+        #if speak_text:
+        #print(f"'{line}'")
+        #text_to_speech(f"'{line}'")  
+        if success:
+            print(f"Updated widget text to: '{line}'")
+        else:
+            print("Error updating widget text.")
+            break
+
+        time.sleep(interval)
+
+def is_inside_frame(box, frame):
+    #print(frame)
+    return box["parent"]["id"]== frame["id"]
+
+
+def monitor_box_position(board_id, api_key, box_id, frame_id, check_interval=1):
+    while True:
+        box = get_widget(board_id, box_id, api_key)
+        print(box)
+        frame = get_frame(board_id, frame_id, api_key)
+
+        if is_inside_frame(box, frame):
+            print("Box is inside the frame!")
+            return True
+        else:
+            print("Box is outside the frame.")
+            time.sleep(check_interval)
+
+def get_widget(board_id, widget_id, api_key):
+    url = f"https://api.miro.com/v2/boards/{board_id}/shapes/{widget_id}"
+    headers = {
+        "accept": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    response = requests.get(url, headers=headers)
+    #response.raise_for_status()
+    return response.json()
+
+def get_frame(board_id, frame_id, api_key):
+    url = f"https://api.miro.com/v2/boards/{board_id}/frames/{frame_id}"
+    headers = {
+        "accept": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    response = requests.get(url, headers=headers)
+    #response.raise_for_status()
+    return response.json()

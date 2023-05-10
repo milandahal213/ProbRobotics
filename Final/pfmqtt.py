@@ -28,7 +28,6 @@ class MQ:
         self.start()
 
     def whenCalled(self, client, userdata, message):
-        print("whencalled called")
         self.val+=str(message.payload.decode("utf-8"))
 
 
