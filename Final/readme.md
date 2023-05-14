@@ -3,7 +3,7 @@ This code implements a system to teach particle filter to high school students u
 Before running the codes make sure of the following.
 1. You will need to run hubOS on your SPIKE Prime. Since we are using UART mode on the SPIKE Prime ports and at the time of writing this code it was available only on hubOS we decided to use the old firmware. Beware that the api is significantly different from the SPIKE 3 firmware. Hence, even if LEGO implements UART on ports in the future the code will not work without significant modifications.
 2. You will need to install Mosquitto broker on your computer. 
-  brew install mosquitto 
+  <code>brew install mosquitto </code>
 
 
 Parts needed:
