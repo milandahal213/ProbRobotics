@@ -12,7 +12,7 @@ This code implements a system to teach particle filter to high school students u
   * Install micropython in ESP8266. 
   * Download the files from the ESP8266 folder and save them on the board. 
   * Change the wifi credentials on the secrets.py file. 
-  * You should also change the ip address on the main.py file with the ip address of the mosquitto broker *n(which is often the ip of the computer running Mosquitto broker)
+  * You should also change the ip address on the main.py file with the ip address of the mosquitto broker <i> which is often the ip of the computer running Mosquitto broker</i>
   
 2. LEGO SPIKE Prime kit
  * You will need LEGO SPIKE Prime kit. Install hubOS firmware. 
