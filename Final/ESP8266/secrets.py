@@ -1,0 +1,1 @@
+Tufts_Wireless = {'ssid':'Tufts_Wireless','pass':''}
