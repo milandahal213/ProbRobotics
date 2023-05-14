@@ -16,4 +16,18 @@ This code implements a system to teach particle filter to high school students u
   
 2. LEGO SPIKE Prime kit
  * You will need LEGO SPIKE Prime kit. Install hubOS firmware. 
- * Download the 
+ * Download the code from the SPIKEPrimecode folder and save it in one of the slots
+ * You will need to edit the code with the ip address of your Mosquitto broker. 
+
+3. Computer with wifi connection and Mosquitto broker installed
+* Download the code from the folder Code on computer. 
+* Update the code with the ip address of your Mosquitto broker. 
+* Update the api key, board id and frame id of your Miro board. you can copy the artefacts from this Miro board https://miro.com/app/board/uXjVMTM_70Y=/ 
+
+
+# Running the code
+* Run the SPIKE Prime code
+* Run the code on your computer. Make sure your MQTT broker is up and running
+
+
+You can test the communication by sending msg "3" and "4" to topics milan/listen to turn on and off the in built LED on ESP8266 boards. 
